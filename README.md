@@ -5,12 +5,16 @@
 This is a small "library" of bash functions that are used by other scripts. All functions begin with "gl_" to identify them as coming from this library. To include them in your script, add the following lines to your bash scripts.
 ```
 #!/bin/bash
+
 # load GL functions
+# See https://github.com/guideloom/gl_functions.sh
+
 glfunc_path=/home/vbox/bin/gl_functions.sh
 
 if [[ ! -f ${glfunc_path} ]]; then
   echo "Error: Cannot find GL functions script."
   echo "       Check path ${glfunc_path}."
+  echo "       Additional info in gl_functions.sh project @ https://github.com/guideloom"
   echo "       Exiting."
   exit 1
 fi
