@@ -25,20 +25,13 @@
 # see below for list of variables and their functions
 
 # version of this functions script
-gl_version=1.02
+gl_version=1.03
 
 # syslog enable
 # 0 = do not send to syslog
 # 1 = send to syslog
 # default: 0
 gl_syslog=0
-
-# stderr enable
-# 0 = do not send to strerr
-# 1 = send to stderr
-# default: 0
-# NOTE: reset to zero after each call!
-gl_stderr=0
 
 # syslogid to use when sending to syslog
 # set to string to use
@@ -78,7 +71,7 @@ gl_run () {
 }
 
 # =======================================================
-# log a single line function
+# log a single line to stdout
 # set global var gl_syslog to "1" to enable syslog output as well
 # set global var gl_timeformat to change the timestamp output to use
 #
@@ -87,19 +80,30 @@ gl_log() {
   local gl_logtimestamp
 
   gl_logtimestamp=$(date +${gl_timeformat})
-    
-  # echo the log message
-  if [[ "${gl_stderr}" -eq 1 ]]; then
-    printf "%s\n" "${gl_logtimestamp} $*" >&2;
-    # force reset
-    gl_stderr=0
-  else
-    printf "%s\n" "${gl_logtimestamp} $*"
-  fi      
+  printf "%s\n" "${gl_logtimestamp} LOG:$*"
 
   # If syslog is enabled, also log the message to syslog
   if [[ "${gl_syslog}" -eq 1 ]]; then
-    printf "%s\n" "$*" | logger -t "${gl_syslogid}"
+    printf "%s\n" "LOG:$*" | logger -t "${gl_syslogid}"
+  fi
+
+}
+
+# =======================================================
+# log a single line to stderr
+# set global var gl_syslog to "1" to enable syslog output as well
+# set global var gl_timeformat to change the timestamp output to use
+#
+gl_err() {
+
+  local gl_logtimestamp
+
+  gl_logtimestamp=$(date +${gl_timeformat})
+  printf "%s\n" "${gl_logtimestamp} ERR:$*" >&2;
+
+  # If syslog is enabled, also log the message to syslog
+  if [[ "${gl_syslog}" -eq 1 ]]; then
+    printf "%s\n" "ERR:$*" | logger -t "${gl_syslogid}"
   fi
 
 }
