@@ -25,13 +25,20 @@
 # see below for list of variables and their functions
 
 # version of this functions script
-gl_version=1.00
+gl_version=1.02
 
 # syslog enable
 # 0 = do not send to syslog
 # 1 = send to syslog
 # default: 0
 gl_syslog=0
+
+# stderr enable
+# 0 = do not send to strerr
+# 1 = send to stderr
+# default: 0
+# NOTE: reset to zero after each call!
+gl_stderr=0
 
 # syslogid to use when sending to syslog
 # set to string to use
@@ -82,12 +89,19 @@ gl_log() {
   gl_logtimestamp=$(date +${gl_timeformat})
     
   # echo the log message
-  printf "%s\n" "${gl_logtimestamp} $*"
+  if [[ "${gl_stderr}" -eq 1 ]]; then
+    printf "%s\n" "${gl_logtimestamp} $*" >&2;
+    # force reset
+    gl_stderr=0
+  else
+    printf "%s\n" "${gl_logtimestamp} $*"
+  fi      
 
   # If syslog is enabled, also log the message to syslog
   if [[ "${gl_syslog}" -eq 1 ]]; then
     printf "%s\n" "$*" | logger -t "${gl_syslogid}"
   fi
+
 }
 
 # =======================================================
@@ -153,6 +167,45 @@ gl_array_contains () {
   done
 
   echo $gl_in
+}
+
+# =======================================================
+# check if all items in array passed can be found
+# these are programs to use.
+# 
+# arg 1 = verbose error (1 = output error, 0 = silent)
+# arg 2 = array
+
+gl_checkprereqs () {
+  # return 0 if all elements found
+  # return 1 if missing any element
+    
+  local gl_verbose=$1
+  local -n gl_array=$2
+#  local gl_array=${2[@]}
+
+  local gl_element
+  local gl_status
+  local gl_return=""
+  
+  for gl_element in "${gl_array[@]}"; do
+    # look for file called gl_element
+    if [[ ! -f ${gl_element} ]]; then
+      # not a file, check if command in path
+      command -v ${gl_element} >& /dev/null
+      gl_status=$?
+      if [[ ${gl_status} -ne 0 ]]; then
+        if [[ ${gl_verbose} -ne 0 ]]; then
+          gl_log "Error: ${gl_element} command not found. Check path or not installed."
+        fi
+        gl_return=1
+      fi
+    fi
+  done
+
+  if [[ ${gl_verbose} -eq 0 ]]; then
+    echo ${gl_return}
+  fi
 }
 
 # =======================================================
